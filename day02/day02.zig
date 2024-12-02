@@ -2,8 +2,6 @@ const std = @import("std");
 const print = std.debug.print;
 
 const input = @embedFile("input.txt");
-// const input = "16 13 11 10 7 5 8\n";
-
 
 pub fn main() !void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};

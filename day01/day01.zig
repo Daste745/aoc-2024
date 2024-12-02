@@ -21,8 +21,7 @@ pub fn main() !void {
         var parts = std.mem.splitScalar(u8, line, ' ');
         const leftNum = parts.next().?;
         while (parts.peek()) |peek| {
-            if (std.mem.eql(u8, peek, "")) _ = parts.next()
-            else break;
+            if (std.mem.eql(u8, peek, "")) _ = parts.next() else break;
         }
         const rightNum = parts.next().?;
 
