@@ -1,17 +1,19 @@
 const std = @import("std");
 const print = std.debug.print;
 
-const input = @embedFile("input.txt");
+const Data = struct {
+    left: std.ArrayList(i32),
+    right: std.ArrayList(i32),
 
-pub fn main() !void {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    defer _ = gpa.deinit();
-    const allocator = gpa.allocator();
+    pub fn deinit(self: Data) void {
+        self.left.deinit();
+        self.right.deinit();
+    }
+};
 
-    var leftNumbers = std.ArrayList(i32).init(allocator);
-    var rightNumbers = std.ArrayList(i32).init(allocator);
-    defer leftNumbers.deinit();
-    defer rightNumbers.deinit();
+fn parseInput(alloc: std.mem.Allocator, input: []const u8) !Data {
+    var left = std.ArrayList(i32).init(alloc);
+    var right = std.ArrayList(i32).init(alloc);
 
     var lines = std.mem.splitScalar(u8, input, '\n');
     while (lines.next()) |line| {
@@ -19,46 +21,52 @@ pub fn main() !void {
 
         // TODO)) Is there a better way to do this?
         var parts = std.mem.splitScalar(u8, line, ' ');
-        const leftNum = parts.next().?;
+        const leftRaw = parts.next().?;
         while (parts.peek()) |peek| {
             if (std.mem.eql(u8, peek, "")) _ = parts.next() else break;
         }
-        const rightNum = parts.next().?;
+        const rightRaw = parts.next().?;
 
-        const left = try std.fmt.parseInt(i32, leftNum, 10);
-        const right = try std.fmt.parseInt(i32, rightNum, 10);
-        try leftNumbers.append(left);
-        try rightNumbers.append(right);
+        try left.append(try std.fmt.parseInt(i32, leftRaw, 10));
+        try right.append(try std.fmt.parseInt(i32, rightRaw, 10));
     }
 
-    part1(try leftNumbers.clone(), try rightNumbers.clone());
-    try part2(leftNumbers, rightNumbers);
+    return .{ .left = left, .right = right };
 }
 
-fn part1(leftNumbers: std.ArrayList(i32), rightNumbers: std.ArrayList(i32)) void {
-    defer leftNumbers.deinit();
-    defer rightNumbers.deinit();
+pub fn main() !void {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deinit();
+    const alloc = gpa.allocator();
+    const input = @embedFile("input.txt");
 
-    std.mem.sort(i32, leftNumbers.items, {}, comptime std.sort.asc(i32));
-    std.mem.sort(i32, rightNumbers.items, {}, comptime std.sort.asc(i32));
+    print("Part 1: {d}\n", .{try part1(alloc, input)});
+    print("Part 2: {d}\n", .{try part2(alloc, input)});
+}
 
-    var total: u64 = 0;
-    for (leftNumbers.items, rightNumbers.items) |a, b| {
+fn part1(alloc: std.mem.Allocator, input: []const u8) !i64 {
+    const data = try parseInput(alloc, input);
+    defer data.deinit();
+
+    std.mem.sort(i32, data.left.items, {}, comptime std.sort.asc(i32));
+    std.mem.sort(i32, data.right.items, {}, comptime std.sort.asc(i32));
+
+    var total: i64 = 0;
+    for (data.left.items, data.right.items) |a, b| {
         const distance = @abs(a - b);
         total += distance;
         // print("l:{any} r:{any} d:{any}\n", .{a, b, distance});
     }
-    print("Part 1: {d}\n", .{total});
+    return total;
 }
 
-fn part2(leftNumbers: std.ArrayList(i32), rightNumbers: std.ArrayList(i32)) !void {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    defer _ = gpa.deinit();
-    const allocator = gpa.allocator();
+fn part2(alloc: std.mem.Allocator, input: []const u8) !i64 {
+    const data = try parseInput(alloc, input);
+    defer data.deinit();
 
-    var rightCounts = std.AutoHashMap(i32, i32).init(allocator);
+    var rightCounts = std.AutoHashMap(i32, i32).init(alloc);
     defer rightCounts.deinit();
-    for (rightNumbers.items) |item| {
+    for (data.right.items) |item| {
         if (rightCounts.get(item)) |existingVal| {
             try rightCounts.put(item, existingVal + 1);
         } else {
@@ -67,10 +75,10 @@ fn part2(leftNumbers: std.ArrayList(i32), rightNumbers: std.ArrayList(i32)) !voi
     }
 
     var total: i64 = 0;
-    for (leftNumbers.items) |item| {
+    for (data.left.items) |item| {
         if (rightCounts.get(item)) |count| {
             total += item * count;
         }
     }
-    print("Part 2: {d}\n", .{total});
+    return total;
 }

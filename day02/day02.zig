@@ -1,22 +1,23 @@
 const std = @import("std");
 const print = std.debug.print;
 
-const input = @embedFile("input.txt");
+const Data = struct {
+    reports: std.ArrayList(std.ArrayList(i32)),
 
-pub fn main() !void {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    defer _ = gpa.deinit();
-    const allocator = gpa.allocator();
+    pub fn deinit(self: Data) void {
+        for (self.reports.items) |report| report.deinit();
+        self.reports.deinit();
+    }
+};
 
-    var reports = std.ArrayList(std.ArrayList(i32)).init(allocator);
-    defer reports.deinit();
+fn parseInput(alloc: std.mem.Allocator, input: []const u8) !Data {
+    var reports = std.ArrayList(std.ArrayList(i32)).init(alloc);
 
     var lines = std.mem.splitScalar(u8, input, '\n');
     while (lines.next()) |line| {
         if (line.len == 0) continue;
 
-        var report = std.ArrayList(i32).init(allocator);
-
+        var report = std.ArrayList(i32).init(alloc);
         var parts = std.mem.splitScalar(u8, line, ' ');
         while (parts.next()) |part| {
             const num = try std.fmt.parseInt(i32, part, 10);
@@ -26,24 +27,37 @@ pub fn main() !void {
         try reports.append(report);
     }
 
-    try part1(reports);
-    try part2(reports);
-
-    for (reports.items) |report| report.deinit();
+    return .{ .reports = reports };
 }
 
-fn part1(reports: std.ArrayList(std.ArrayList(i32))) !void {
-    var total: u32 = 0;
-    for (reports.items) |report| {
+pub fn main() !void {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deinit();
+    const alloc = gpa.allocator();
+    const input = @embedFile("input.txt");
+
+    print("Part 1: {d}\n", .{try part1(alloc, input)});
+    print("Part 2: {d}\n", .{try part2(alloc, input)});
+}
+
+fn part1(alloc: std.mem.Allocator, input: []const u8) !i64 {
+    const data = try parseInput(alloc, input);
+    defer data.deinit();
+
+    var total: i64 = 0;
+    for (data.reports.items) |report| {
         if (try isSafe(report)) total += 1;
     }
-    print("Part 1: {d}\n", .{total});
+    return total;
 }
 
-fn part2(reports: std.ArrayList(std.ArrayList(i32))) !void {
-    var total: u32 = 0;
+fn part2(alloc: std.mem.Allocator, input: []const u8) !i64 {
+    const data = try parseInput(alloc, input);
+    defer data.deinit();
 
-    for (reports.items) |report| {
+    var total: i64 = 0;
+
+    for (data.reports.items) |report| {
         var reportMutation = try report.clone();
         defer reportMutation.deinit();
         for (0..(report.items.len + 1)) |i| {
@@ -64,7 +78,7 @@ fn part2(reports: std.ArrayList(std.ArrayList(i32))) !void {
         // print("\n", .{});
     }
 
-    print("Part 2: {d}\n", .{total});
+    return total;
 }
 
 fn isSafe(report: std.ArrayList(i32)) !bool {
