@@ -106,3 +106,22 @@ fn isSafe(report: std.ArrayList(i32)) !bool {
 
     return false;
 }
+
+const exampleInput =
+    \\7 6 4 2 1
+    \\1 2 7 8 9
+    \\9 7 6 2 1
+    \\1 3 2 4 5
+    \\8 6 4 4 1
+    \\1 3 6 7 9
+;
+
+test part1 {
+    const result = try part1(std.testing.allocator, exampleInput);
+    try std.testing.expectEqual(2, result);
+}
+
+test part2 {
+    const result = try part2(std.testing.allocator, exampleInput);
+    try std.testing.expectEqual(4, result);
+}

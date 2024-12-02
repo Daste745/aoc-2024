@@ -82,3 +82,22 @@ fn part2(alloc: std.mem.Allocator, input: []const u8) !i64 {
     }
     return total;
 }
+
+const exampleInput =
+    \\3   4
+    \\4   3
+    \\2   5
+    \\1   3
+    \\3   9
+    \\3   3
+;
+
+test part1 {
+    const result = try part1(std.testing.allocator, exampleInput);
+    try std.testing.expectEqual(11, result);
+}
+
+test part2 {
+    const result = try part2(std.testing.allocator, exampleInput);
+    try std.testing.expectEqual(31, result);
+}
