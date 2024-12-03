@@ -1,7 +1,7 @@
 const std = @import("std");
 const print = std.debug.print;
 
-const Mul = struct { a: i32, b: i32 };
+const Mul = struct { i32, i32 };
 const Data = struct {
     multiplications: std.ArrayList(Mul),
 
@@ -53,7 +53,7 @@ fn parseInput(alloc: std.mem.Allocator, input: []const u8, followDosAndDonts: bo
                         if (parsedArgs.items.len != 2) break;
 
                         print("  args: {any}\n", .{parsedArgs.items});
-                        try multiplications.append(.{ .a = parsedArgs.items[0], .b = parsedArgs.items[1] });
+                        try multiplications.append(.{ parsedArgs.items[0], parsedArgs.items[1] });
 
                         // Don't try to look for more closing brackets - we already found one
                         break;
@@ -96,7 +96,7 @@ fn part1(alloc: std.mem.Allocator, input: []const u8) !i64 {
 
     var total: i64 = 0;
     for (data.multiplications.items) |mul| {
-        total += mul.a * mul.b;
+        total += mul[0] * mul[1];
     }
     return total;
 }
@@ -107,7 +107,7 @@ fn part2(alloc: std.mem.Allocator, input: []const u8) !i64 {
 
     var total: i64 = 0;
     for (data.multiplications.items) |mul| {
-        total += mul.a * mul.b;
+        total += mul[0] * mul[1];
     }
     return total;
 }
